@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="30 ჩელენჯი">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>30 დღის ჩელენჯი</title>
+
+<!-- PWA Manifest inline -->
+
+<script>
+const manifestData = {
+  name: "30 დღის ჩელენჯი",
+  short_name: "30 ჩელენჯი",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#0a0a0f",
+  theme_color: "#e8c84a",
+  icons: [
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230a0a0f' rx='40'/><text y='130' x='96' text-anchor='middle' font-size='110' font-family='serif'>🔥</text></svg>", sizes: "192x192", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestUrl = URL.createObjectURL(blob);
+document.write('<link rel="manifest" href="' + manifestUrl + '">');
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+Georgian:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --card: #1a1a24;
+  --border: #2a2a3a;
+  --accent: #e8c84a;
+  --accent2: #4ae8a0;
+  --accent3: #e84a6a;
+  --text: #f0f0f0;
+  --muted: #6a6a8a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans Georgian', sans-serif;
+  min-height: 100vh;
+  padding: 20px;
+  padding-bottom: 40px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.container { max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+
+header { text-align: center; padding: 30px 0 24px; }
+
+.title-day {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px, 20vw, 96px);
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent) 0%, #f0a840 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+}
+
+.title-sub {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.calendar-section { margin: 8px 0 20px; }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 7px;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  user-select: none;
+}
+
+.cal-day.today { border-color: var(--accent); color: var(--accent); }
+
+.cal-day.completed {
+  background: rgba(232, 200, 74, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cal-day.completed::after {
+  content: '✓';
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 8px;
+  color: var(--accent2);
+}
+
+.cal-day.failed {
+  background: rgba(232, 74, 106, 0.08);
+  border-color: rgba(232, 74, 106, 0.4);
+  color: rgba(232, 74, 106, 0.6);
+}
+
+.cal-day:hover:not(.future) {
+  transform: scale(1.08);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cal-day.future { opacity: 0.3; cursor: default; }
+
+.tasks-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.tasks-card h3 {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 4px;
+}
+
+.task-row:last-child { border-bottom: none; }
+.task-row:hover { padding-left: 4px; }
+
+.task-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.task-info { flex: 1; }
+
+.task-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.task-sub { font-size: 11px; color: var(--muted); }
+
+.task-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.task-row.done .task-check {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #0a0a0f;
+}
+
+.task-row.done .task-name { color: var(--muted); text-decoration: line-through; }
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.exercise-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.exercise-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.exercise-goal {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--accent);
+}
+
+.bar-bg {
+  height: 8px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.exercise-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.num-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Noto Sans Georgian', sans-serif;
+  font-size: 15px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.num-input:focus { border-color: var(--accent2); }
+
+.add-btn {
+  background: var(--accent2);
+  color: #0a0a0f;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.add-btn:hover { transform: scale(1.05); }
+
+/* Bible card */
+.bible-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.bible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.bible-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bible-count-display {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--accent);
+}
+
+.bible-counter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.bible-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.bible-btn:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.05); }
+
+.bible-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: var(--accent);
+  min-width: 50px;
+  text-align: center;
+}
+
+.bible-sub {
+  font-size: 11px;
+  color: var(--muted);
+  flex: 1;
+}
+
+.save-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent) 0%, #f0a840 100%);
+  color: #0a0a0f;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-family: 'Noto Sans Georgian', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+  margin-bottom: 24px;
+}
+
+.save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,200,74,0.3); }
+.save-btn:active { transform: translateY(0); }
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(232, 200, 74, 0.1);
+  border: 1px solid rgba(232, 200, 74, 0.3);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--accent2);
+  color: #0a0a0f;
+  padding: 12px 24px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 0.3s ease;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="title-day" id="dayNum">D1</div>
+    <div class="title-sub">30 დღის ჩელენჯი</div>
+    <div style="margin-top:14px;">
+      <span class="streak-badge">🔥 <span id="streakNum">0</span> დღის სერია</span>
+    </div>
+  </header>
+
+  <!-- Calendar -->
+
+  <div class="calendar-section">
+    <div class="section-label">პროგრესი</div>
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <!-- Stats -->
+
+  <div class="progress-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="daysCompleted" style="color: var(--accent2)">0</div>
+      <div class="stat-label">სრული დღე</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="daysFailed" style="color: var(--accent3)">0</div>
+      <div class="stat-label">გამოტოვება</div>
+    </div>
+  </div>
+
+  <!-- Daily Tasks -->
+
+  <div class="tasks-card">
+    <h3>დღის ამოცანები</h3>
+
+```
+<div class="task-row" id="task-chukchena" onclick="toggleTask('chukchena')">
+  <div class="task-icon" style="background: rgba(232,74,106,0.1);">🔞</div>
+  <div class="task-info">
+    <div class="task-name">🔞 — სრული დღე</div>
+    <div class="task-sub">0 ტოლერანსი</div>
+  </div>
+  <div class="task-check" id="check-chukchena"></div>
+</div>
+
+<div class="task-row" id="task-creatine" onclick="toggleTask('creatine')">
+  <div class="task-icon" style="background: rgba(74,232,160,0.1);">💊</div>
+  <div class="task-info">
+    <div class="task-name">კრეატინი</div>
+    <div class="task-sub">5გ დღეში</div>
+  </div>
+  <div class="task-check" id="check-creatine"></div>
+</div>
+
+<div class="task-row" id="task-water" onclick="toggleTask('water')">
+  <div class="task-icon" style="background: rgba(74,160,232,0.1);">💧</div>
+  <div class="task-info">
+    <div class="task-name">3+ ლიტრი წყალი</div>
+    <div class="task-sub">ჰიდრატაცია</div>
+  </div>
+  <div class="task-check" id="check-water"></div>
+</div>
+
+<div class="task-row" id="task-history" onclick="toggleTask('history')">
+  <div class="task-icon" style="background: rgba(200,150,74,0.1);">📖</div>
+  <div class="task-info">
+    <div class="task-name">ისტორიის წიგნი</div>
+    <div class="task-sub">მინ. 2 გაკვეთილი</div>
+  </div>
+  <div class="task-check" id="check-history"></div>
+</div>
+
+<div class="task-row" id="task-bible" onclick="toggleTask('bible')">
+  <div class="task-icon" style="background: rgba(160,100,232,0.1);">✝️</div>
+  <div class="task-info">
+    <div class="task-name">ახალი აღთქმა</div>
+    <div class="task-sub">→ <span id="bibleCountLabel">0</span>/6 წიგნი</div>
+  </div>
+  <div class="task-check" id="check-bible"></div>
+</div>
+```
+
+  </div>
+
+  <!-- Bible tracker -->
+
+  <div class="bible-card">
+    <div class="bible-header">
+      <span class="bible-title">✝️ ახალი აღთქმა</span>
+      <span class="bible-count-display"><span id="bibleTotalDisplay">0</span>/6</span>
+    </div>
+    <div class="bar-bg">
+      <div class="bar-fill" id="bibleBar" style="width:0%; background: linear-gradient(90deg, #a064e8, #e84a9a);"></div>
+    </div>
+    <div class="exercise-info">
+      <span>დღეს: <span id="bibleTodayDisplay">0</span> წიგნი</span>
+      <span>სულ: <span id="bibleTotalDisplay2">0</span>/6</span>
+    </div>
+    <div class="bible-counter-row">
+      <button class="bible-btn" onclick="changeBible(-1)">−</button>
+      <div class="bible-num" id="bibleNum">0</div>
+      <button class="bible-btn" onclick="changeBible(1)">+</button>
+      <div class="bible-sub">დღეს წაკითხული წიგნები</div>
+    </div>
+  </div>
+
+  <!-- ტურნიკი -->
+
+  <div class="exercise-card">
+    <div class="exercise-header">
+      <span class="exercise-title">🏋️ ტურნიკი</span>
+      <span class="exercise-goal"><span id="turnTotal">0</span> / 750</span>
+    </div>
+    <div class="bar-bg">
+      <div class="bar-fill" id="turnBar" style="width:0%; background: linear-gradient(90deg, var(--accent2), var(--accent));"></div>
+    </div>
+    <div class="exercise-info">
+      <span>დღეს: <span id="turnToday">0</span> რეპი</span>
+      <span>დარჩა: <span id="turnNeeded">750</span> რეპი</span>
+    </div>
+    <div class="input-row">
+      <input class="num-input" type="number" id="turnInput" placeholder="დღის რეპები..." min="0">
+      <button class="add-btn" onclick="addExercise('turn')">+ დამატება</button>
+    </div>
+  </div>
+
+  <!-- აჯიმანია -->
+
+  <div class="exercise-card">
+    <div class="exercise-header">
+      <span class="exercise-title">💪 აჯიმანია</span>
+      <span class="exercise-goal"><span id="ajiTotal">0</span> / 750</span>
+    </div>
+    <div class="bar-bg">
+      <div class="bar-fill" id="ajiBar" style="width:0%; background: linear-gradient(90deg, #4ae8c8, #4a9ae8);"></div>
+    </div>
+    <div class="exercise-info">
+      <span>დღეს: <span id="ajiToday">0</span> რეპი</span>
+      <span>დარჩა: <span id="ajiNeeded">750</span> რეპი</span>
+    </div>
+    <div class="input-row">
+      <input class="num-input" type="number" id="ajiInput" placeholder="დღის რეპები..." min="0">
+      <button class="add-btn" onclick="addExercise('aji')">+ დამატება</button>
+    </div>
+  </div>
+
+  <!-- ბუქნი -->
+
+  <div class="exercise-card">
+    <div class="exercise-header">
+      <span class="exercise-title">🤜 ბუქნი</span>
+      <span class="exercise-goal"><span id="buqTotal">0</span> / 750</span>
+    </div>
+    <div class="bar-bg">
+      <div class="bar-fill" id="buqBar" style="width:0%; background: linear-gradient(90deg, #e84a6a, #e8a040);"></div>
+    </div>
+    <div class="exercise-info">
+      <span>დღეს: <span id="buqToday">0</span> რეპი</span>
+      <span>დარჩა: <span id="buqNeeded">750</span> რეპი</span>
+    </div>
+    <div class="input-row">
+      <input class="num-input" type="number" id="buqInput" placeholder="დღის რეპები..." min="0">
+      <button class="add-btn" onclick="addExercise('buq')">+ დამატება</button>
+    </div>
+  </div>
+
+<button class="save-btn" onclick="saveDay()">✓ დღე შენახვა</button>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════
+const STORAGE_KEY  = 'lasha30challenge';
+const START_KEY    = STORAGE_KEY + '_start';
+
+// Persist start date on first launch
+const START_DATE = (() => {
+  const s = localStorage.getItem(START_KEY);
+  if (s) return new Date(s);
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  localStorage.setItem(START_KEY, d.toISOString());
+  return d;
+})();
+
+function getData()      { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+function saveData(d)    { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+// ═══════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════
+function getTodayKey() {
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const diff = Math.floor((now - START_DATE) / 86400000);
+  return 'day_' + Math.min(Math.max(diff, 0), 29);
+}
+
+function getCurrentDayNum() {
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  return Math.floor((now - START_DATE) / 86400000) + 1;
+}
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const DEFAULT_TASKS     = { chukchena: false, creatine: false, water: false, history: false, bible: false };
+const DEFAULT_EXERCISES = { turn: 0, aji: 0, buq: 0 };
+
+let todayTasks     = { ...DEFAULT_TASKS };
+let todayExercises = { ...DEFAULT_EXERCISES };
+let todayBible     = 0;
+
+// ═══════════════════════════════════════════
+//  LOAD
+// ═══════════════════════════════════════════
+function loadToday() {
+  const data = getData();
+  const key  = getTodayKey();
+  if (data[key]) {
+    todayTasks     = { ...DEFAULT_TASKS,     ...(data[key].tasks     || {}) };
+    todayExercises = { ...DEFAULT_EXERCISES, ...(data[key].exercises || {}) };
+    todayBible     = data[key].bibleBooks || 0;
+  }
+  renderTasks();
+  renderAllExercises();
+  renderBible();
+}
+
+// ═══════════════════════════════════════════
+//  TASKS
+// ═══════════════════════════════════════════
+function toggleTask(id) {
+  todayTasks[id] = !todayTasks[id];
+  renderTasks();
+}
+
+function renderTasks() {
+  Object.keys(todayTasks).forEach(id => {
+    const row   = document.getElementById('task-' + id);
+    const check = document.getElementById('check-' + id);
+    if (!row || !check) return;
+    if (todayTasks[id]) {
+      row.classList.add('done');
+      check.textContent = '✓';
+    } else {
+      row.classList.remove('done');
+      check.textContent = '';
+    }
+  });
+
+  // Update bible sub-label with cumulative total
+  const data = getData();
+  let bibleSum = todayBible;
+  Object.keys(data).forEach(k => {
+    if (k.startsWith('day_') && k !== getTodayKey()) {
+      bibleSum += (data[k].bibleBooks || 0);
+    }
+  });
+  const el = document.getElementById('bibleCountLabel');
+  if (el) el.textContent = Math.min(bibleSum, 6);
+}
+
+// ═══════════════════════════════════════════
+//  EXERCISES  (goal = 750 each)
+// ═══════════════════════════════════════════
+const EXERCISES = {
+  turn: { goal: 750, totalId: 'turnTotal', barId: 'turnBar', neededId: 'turnNeeded', todayId: 'turnToday', inputId: 'turnInput' },
+  aji:  { goal: 750, totalId: 'ajiTotal',  barId: 'ajiBar',  neededId: 'ajiNeeded',  todayId: 'ajiToday',  inputId: 'ajiInput'  },
+  buq:  { goal: 750, totalId: 'buqTotal',  barId: 'buqBar',  neededId: 'buqNeeded',  todayId: 'buqToday',  inputId: 'buqInput'  },
+};
+
+function addExercise(ex) {
+  const cfg = EXERCISES[ex];
+  const inp = document.getElementById(cfg.inputId);
+  const val = parseInt(inp.value) || 0;
+  if (val <= 0) { showToast('0-ზე მეტი შეიყვანე!'); return; }
+  todayExercises[ex] = (todayExercises[ex] || 0) + val;
+  inp.value = '';
+  renderExercise(ex);
+  showToast('+' + val + ' დამატებულია!');
+}
+
+function renderExercise(ex) {
+  const cfg  = EXERCISES[ex];
+  const data = getData();
+  const key  = getTodayKey();
+
+  // Cumulative total across all saved days + today's unsaved session
+  let total = todayExercises[ex] || 0;
+  Object.keys(data).forEach(k => {
+    if (k.startsWith('day_') && k !== key) {
+      total += ((data[k].exercises || {})[ex] || 0);
+    }
+  });
+
+  const pct     = Math.min(Math.round(total / cfg.goal * 100), 100);
+  const needed  = Math.max(0, cfg.goal - total);
+
+  document.getElementById(cfg.totalId).textContent  = total;
+  document.getElementById(cfg.barId).style.width    = pct + '%';
+  document.getElementById(cfg.neededId).textContent = needed;
+  document.getElementById(cfg.todayId).textContent  = todayExercises[ex] || 0;
+}
+
+function renderAllExercises() {
+  Object.keys(EXERCISES).forEach(renderExercise);
+}
+
+// ═══════════════════════════════════════════
+//  BIBLE
+// ═══════════════════════════════════════════
+function changeBible(d) {
+  todayBible = Math.max(0, todayBible + d);
+  // auto-check bible task when today ≥ 1 (or uncheck if 0)
+  todayTasks.bible = todayBible >= 1;
+  renderBible();
+  renderTasks();
+}
+
+function renderBible() {
+  const data = getData();
+  const key  = getTodayKey();
+
+  let total = todayBible;
+  Object.keys(data).forEach(k => {
+    if (k.startsWith('day_') && k !== key) {
+      total += (data[k].bibleBooks || 0);
+    }
+  });
+
+  const capped = Math.min(total, 6);
+  const pct    = Math.round(capped / 6 * 100);
+
+  // bibleBar
+  const bar = document.getElementById('bibleBar');
+  if (bar) bar.style.width = pct + '%';
+
+  // Displays
+  ['bibleTotalDisplay', 'bibleTotalDisplay2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = capped;
+  });
+
+  const todayEl = document.getElementById('bibleTodayDisplay');
+  if (todayEl) todayEl.textContent = todayBible;
+
+  const numEl = document.getElementById('bibleNum');
+  if (numEl) numEl.textContent = todayBible;
+
+  // Sync task label
+  const label = document.getElementById('bibleCountLabel');
+  if (label) label.textContent = capped;
+}
+
+// ═══════════════════════════════════════════
+//  SAVE DAY
+// ═══════════════════════════════════════════
+function saveDay() {
+  const allDone = Object.values(todayTasks).every(Boolean);
+  const data    = getData();
+  const key     = getTodayKey();
+
+  data[key] = {
+    tasks:      { ...todayTasks },
+    exercises:  { ...todayExercises },
+    bibleBooks: todayBible,
+    completed:  allDone,
+    saved:      true,
+  };
+  saveData(data);
+  renderCalendar();
+  renderStats();
+  showToast(allDone ? '🔥 სრული დღე! გამარჯობა!' : '💾 შენახულია');
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════
+function renderCalendar() {
+  const data   = getData();
+  const dayNum = getCurrentDayNum();
+  const cal    = document.getElementById('calendar');
+  cal.innerHTML = '';
+
+  for (let i = 1; i <= 30; i++) {
+    const el  = document.createElement('div');
+    el.className  = 'cal-day';
+    el.textContent = i;
+    const key = 'day_' + (i - 1);
+
+    if (i < dayNum) {
+      if (data[key] && data[key].saved) {
+        el.classList.add(data[key].completed ? 'completed' : 'failed');
+      } else {
+        el.classList.add('failed');
+      }
+    } else if (i === dayNum) {
+      el.classList.add('today');
+    } else {
+      el.classList.add('future');
+    }
+    cal.appendChild(el);
+  }
+
+  document.getElementById('dayNum').textContent = 'D' + Math.min(dayNum, 30);
+}
+
+// ═══════════════════════════════════════════
+//  STATS & STREAK
+// ═══════════════════════════════════════════
+function renderStats() {
+  const data   = getData();
+  const dayNum = getCurrentDayNum();
+  let completed = 0, failed = 0;
+
+  for (let i = 0; i < Math.min(dayNum - 1, 30); i++) {
+    const key = 'day_' + i;
+    if (data[key] && data[key].saved && data[key].completed) completed++;
+    else failed++;
+  }
+
+  document.getElementById('daysCompleted').textContent = completed;
+  document.getElementById('daysFailed').textContent    = failed;
+
+  // Streak: consecutive completed days backwards from yesterday
+  let streak = 0;
+  for (let i = Math.min(dayNum - 2, 29); i >= 0; i--) {
+    const key = 'day_' + i;
+    if (data[key] && data[key].saved && data[key].completed) streak++;
+    else break;
+  }
+  document.getElementById('streakNum').textContent = streak;
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════
+//  SERVICE WORKER  (offline / PWA)
+// ═══════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'challenge30-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['.'])));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).catch(() => r))
+      );
+    });
+  `;
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl  = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+loadToday();
+renderCalendar();
+renderStats();
+</script>
+
+</body>
+</html>
